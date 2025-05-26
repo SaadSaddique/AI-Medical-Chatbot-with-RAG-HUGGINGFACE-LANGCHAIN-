@@ -8,9 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 
-## Uncomment the following files if you're not using pipenv as your virtual environment manager
-#from dotenv import load_dotenv, find_dotenv
-#load_dotenv(find_dotenv())
+
 
 
 DB_FAISS_PATH="vectorstore/db_faiss"
@@ -37,7 +35,7 @@ def load_llm(huggingface_repo_id, HF_TOKEN):
 
 
 def main():
-    st.title("Ask Chatbot!")
+    st.title("Ask Medibot!")
 
     if 'messages' not in st.session_state:
         st.session_state.messages = []
@@ -78,14 +76,18 @@ def main():
                 chain_type_kwargs={'prompt':set_custom_prompt(CUSTOM_PROMPT_TEMPLATE)}
             )
 
-            response=qa_chain.invoke({'query':prompt})
+            response = qa_chain.invoke({'query': prompt})
 
-            result=response["result"]
-            source_documents=response["source_documents"]
-            result_to_show=result+"\nSource Docs:\n"+str(source_documents)
-            #response="Hi, I am MediBot!"
+            result = response["result"]
+            source_documents = response["source_documents"]
+
+            # ✅ Source starts on a new line after result
+            result_to_show = f"{result}\n\n---\n**📚 Source Documents:**\n"
+            for i, doc in enumerate(source_documents, 1):
+                result_to_show += f"\n**[{i}]** {doc.metadata.get('source', 'Unknown Source')} — page {doc.metadata.get('page_label', 'N/A')}"
+
             st.chat_message('assistant').markdown(result_to_show)
-            st.session_state.messages.append({'role':'assistant', 'content': result_to_show})
+            st.session_state.messages.append({'role': 'assistant', 'content': result_to_show})
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
